@@ -8,7 +8,7 @@ interface Video {
   id: number;
   title: string;
   category: string;
-  thumbnail: string;
+  youtubeId: string;
   duration: string;
   views: number;
   description: string;
@@ -19,7 +19,7 @@ const mockVideos: Video[] = [
     id: 1,
     title: 'Как сложить футболку за 2 секунды',
     category: 'Дом',
-    thumbnail: '/placeholder.svg',
+    youtubeId: 'uz6rjbw0ZA0',
     duration: '2:15',
     views: 245000,
     description: 'Японский метод складывания одежды, который сэкономит место и время'
@@ -28,7 +28,7 @@ const mockVideos: Video[] = [
     id: 2,
     title: 'Очистка микроволновки за минуту',
     category: 'Кухня',
-    thumbnail: '/placeholder.svg',
+    youtubeId: 'RllyGCJF614',
     duration: '1:30',
     views: 189000,
     description: 'Используй лимон и воду для идеальной чистоты'
@@ -37,7 +37,7 @@ const mockVideos: Video[] = [
     id: 3,
     title: 'Организация кабелей своими руками',
     category: 'Технологии',
-    thumbnail: '/placeholder.svg',
+    youtubeId: 'WcCLN92eZAk',
     duration: '3:45',
     views: 312000,
     description: 'Простые решения для порядка на рабочем столе'
@@ -46,7 +46,7 @@ const mockVideos: Video[] = [
     id: 4,
     title: 'Идеальные стрелки за 30 секунд',
     category: 'Красота',
-    thumbnail: '/placeholder.svg',
+    youtubeId: 'z8bPqxGQXhQ',
     duration: '2:00',
     views: 421000,
     description: 'Лайфхак с ложкой для безупречного макияжа'
@@ -55,7 +55,7 @@ const mockVideos: Video[] = [
     id: 5,
     title: 'Заморозка зелени правильно',
     category: 'Кухня',
-    thumbnail: '/placeholder.svg',
+    youtubeId: 'rCTZSrYKJBI',
     duration: '1:45',
     views: 156000,
     description: 'Сохрани свежесть зелени на месяцы'
@@ -64,7 +64,7 @@ const mockVideos: Video[] = [
     id: 6,
     title: 'Быстрая зарядка телефона: секреты',
     category: 'Технологии',
-    thumbnail: '/placeholder.svg',
+    youtubeId: 'AF2O4l1JprI',
     duration: '2:30',
     views: 278000,
     description: 'Как заряжать телефон в 2 раза быстрее'
@@ -73,7 +73,7 @@ const mockVideos: Video[] = [
     id: 7,
     title: 'Удаление пятен без химии',
     category: 'Дом',
-    thumbnail: '/placeholder.svg',
+    youtubeId: '6BgLBFQ6drg',
     duration: '3:00',
     views: 198000,
     description: 'Натуральные средства для любых пятен'
@@ -82,7 +82,7 @@ const mockVideos: Video[] = [
     id: 8,
     title: 'Объём волос без фена',
     category: 'Красота',
-    thumbnail: '/placeholder.svg',
+    youtubeId: 'wh8sUCPAibg',
     duration: '1:50',
     views: 334000,
     description: 'Простая техника для пышных волос'
@@ -164,8 +164,14 @@ export default function Index() {
         {currentVideo && (
           <div className="mb-12 animate-fade-in">
             <Card className="overflow-hidden border-0 shadow-lg">
-              <div className="aspect-video bg-muted relative flex items-center justify-center">
-                <Icon name="Play" size={64} className="text-primary" />
+              <div className="aspect-video bg-black relative">
+                <iframe
+                  className="w-full h-full"
+                  src={`https://www.youtube.com/embed/${currentVideo.youtubeId}?autoplay=1&rel=0`}
+                  title={currentVideo.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
               </div>
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -208,6 +214,14 @@ export default function Index() {
                   onClick={() => handleVideoClick(video)}
                 >
                   <div className="aspect-video bg-muted relative overflow-hidden">
+                    <img 
+                      src={`https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`}
+                      alt={video.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`;
+                      }}
+                    />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Icon name="Play" size={48} className="text-white" />
                     </div>
@@ -244,6 +258,14 @@ export default function Index() {
                 onClick={() => handleVideoClick(video)}
               >
                 <div className="aspect-video bg-muted relative overflow-hidden">
+                  <img 
+                    src={`https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`}
+                    alt={video.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`;
+                    }}
+                  />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Icon name="Play" size={48} className="text-white" />
                   </div>
