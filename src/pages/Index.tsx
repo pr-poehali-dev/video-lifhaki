@@ -31,6 +31,7 @@ export default function Index() {
   const [durationFilter, setDurationFilter] = useState<'all' | 'short' | 'medium' | 'long'>('all');
   const [sortBy, setSortBy] = useState<'popular' | 'date' | 'likes'>('popular');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [categoryLinkCopied, setCategoryLinkCopied] = useState(false);
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -349,7 +350,13 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-border">
+      {categoryLinkCopied && (
+        <div className="fixed top-4 right-4 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
+          <Icon name="Check" size={16} />
+          Ссылка скопирована!
+        </div>
+      )}
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -442,6 +449,8 @@ export default function Index() {
                     const url = new URL(window.location.href);
                     url.searchParams.set('category', category);
                     await navigator.clipboard.writeText(url.toString());
+                    setCategoryLinkCopied(true);
+                    setTimeout(() => setCategoryLinkCopied(false), 2000);
                   }}
                 >
                   <Icon name="Link" size={12} />
