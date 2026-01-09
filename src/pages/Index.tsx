@@ -2,17 +2,11 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Icon from '@/components/ui/icon';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import VideoCard from '@/components/VideoCard';
+import VideoPlayerDialog from '@/components/VideoPlayerDialog';
+import CommentsDialog from '@/components/CommentsDialog';
+import ShareDialog from '@/components/ShareDialog';
 
 interface Video {
   id: number;
@@ -281,6 +275,22 @@ export default function Index() {
     setCopySuccess(false);
   };
 
+  const handleLike = (videoId: number) => {
+    setLikedVideos(prev => 
+      prev.includes(videoId) 
+        ? prev.filter(id => id !== videoId)
+        : [...prev, videoId]
+    );
+  };
+
+  const handleFavorite = (videoId: number) => {
+    setFavoriteVideos(prev => 
+      prev.includes(videoId) 
+        ? prev.filter(id => id !== videoId)
+        : [...prev, videoId]
+    );
+  };
+
   const getShareUrl = (video: Video) => {
     return `${window.location.origin}?video=${video.id}`;
   };
@@ -334,13 +344,9 @@ export default function Index() {
     return `${Math.floor(seconds / 86400)} дн назад`;
   };
 
-  const getVideoLikes = (videoId: number, baseLikes: number) => {
-    return baseLikes + (likedVideos.includes(videoId) ? 1 : 0);
-  };
-
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
     return num.toString();
   };
 
@@ -353,89 +359,9 @@ export default function Index() {
       .slice(0, 2);
   };
 
-  const VideoCard = ({ video, index }: { video: Video; index: number }) => (
-    <Card
-      className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden animate-fade-in"
-      style={{ animationDelay: `${index * 50}ms` }}
-      onClick={() => handleVideoClick(video)}
-    >
-      <div className="aspect-video bg-muted relative overflow-hidden">
-        <img 
-          src={`https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`}
-          alt={video.title}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`;
-          }}
-        />
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <Icon name="Play" size={48} className="text-white" />
-        </div>
-        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
-          {video.duration}
-        </div>
-        {watchedVideos.includes(video.id) && (
-          <div className="absolute top-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-            <Icon name="Check" size={12} />
-            Просмотрено
-          </div>
-        )}
-        <div className="absolute top-2 right-2 flex gap-1">
-          <Button
-            size="icon"
-            variant="secondary"
-            className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => toggleFavorite(video.id, e)}
-          >
-            <Icon 
-              name={favoriteVideos.includes(video.id) ? "Star" : "Star"} 
-              size={16}
-              className={favoriteVideos.includes(video.id) ? "fill-yellow-500 text-yellow-500" : ""}
-            />
-          </Button>
-        </div>
-      </div>
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-          {video.title}
-        </h3>
-        <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-          <span className="flex items-center gap-1">
-            <Icon name="Eye" size={14} />
-            {formatNumber(video.views)}
-          </span>
-          <Badge variant="outline" className="text-xs">{video.category}</Badge>
-        </div>
-        <div className="flex items-center gap-2 pt-2 border-t border-border">
-          <Button
-            size="sm"
-            variant={likedVideos.includes(video.id) ? "default" : "ghost"}
-            className="flex-1 h-8"
-            onClick={(e) => toggleLike(video.id, e)}
-          >
-            <Icon 
-              name="ThumbsUp" 
-              size={14} 
-              className={likedVideos.includes(video.id) ? "fill-current" : ""}
-            />
-            <span className="ml-1">{formatNumber(getVideoLikes(video.id, video.likes))}</span>
-          </Button>
-          <Button
-            size="icon"
-            variant={favoriteVideos.includes(video.id) ? "default" : "ghost"}
-            className="h-8 w-8"
-            onClick={(e) => toggleFavorite(video.id, e)}
-          >
-            <Icon 
-              name="Star" 
-              size={14}
-              className={favoriteVideos.includes(video.id) ? "fill-current" : ""}
-            />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const getVideoLikes = (videoId: number, baseLikes: number) => {
+    return likedVideos.includes(videoId) ? baseLikes + 1 : baseLikes;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -487,138 +413,73 @@ export default function Index() {
         </div>
 
         {currentVideo && (
-          <div className="mb-12 animate-fade-in">
-            <Card className="overflow-hidden border-0 shadow-lg">
-              <div className="aspect-video bg-black relative">
-                <iframe
-                  className="w-full h-full"
-                  src={`https://www.youtube.com/embed/${currentVideo.youtubeId}?autoplay=1&rel=0`}
-                  title={currentVideo.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
+          <div className="mb-12">
+            <Card className="overflow-hidden">
               <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold mb-2 text-foreground">{currentVideo.title}</h3>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                      <span className="flex items-center gap-1">
-                        <Icon name="Eye" size={16} />
-                        {formatNumber(currentVideo.views)} просмотров
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Icon name="Clock" size={16} />
-                        {currentVideo.duration}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Icon name="MessageCircle" size={16} />
-                        {videoComments.length} {videoComments.length === 1 ? 'комментарий' : 'комментариев'}
-                      </span>
-                    </div>
-                    <Badge variant="secondary">{currentVideo.category}</Badge>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="aspect-video rounded-lg overflow-hidden bg-black">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={`https://www.youtube.com/embed/${currentVideo.youtubeId}`}
+                      title={currentVideo.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full"
+                    />
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="icon"
-                      variant={likedVideos.includes(currentVideo.id) ? "default" : "ghost"}
-                      onClick={(e) => toggleLike(currentVideo.id, e)}
-                    >
-                      <Icon 
-                        name="ThumbsUp" 
-                        size={20}
-                        className={likedVideos.includes(currentVideo.id) ? "fill-current" : ""}
-                      />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant={favoriteVideos.includes(currentVideo.id) ? "default" : "ghost"}
-                      onClick={(e) => toggleFavorite(currentVideo.id, e)}
-                    >
-                      <Icon 
-                        name="Star" 
-                        size={20}
-                        className={favoriteVideos.includes(currentVideo.id) ? "fill-current" : ""}
-                      />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => handleShare(currentVideo)}>
-                      <Icon name="Share2" size={20} />
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-muted-foreground leading-relaxed mb-4">{currentVideo.description}</p>
-                <div className="flex items-center gap-4 text-sm mb-6">
-                  <span className="flex items-center gap-1 text-foreground">
-                    <Icon name="ThumbsUp" size={16} />
-                    {formatNumber(getVideoLikes(currentVideo.id, currentVideo.likes))} лайков
-                  </span>
-                </div>
-
-                <div className="border-t border-border pt-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Icon name="MessageCircle" size={20} />
-                    Комментарии ({videoComments.length})
-                  </h4>
                   
-                  <div className="mb-6">
-                    <div className="flex gap-3 mb-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-primary text-white">
-                          {getInitials(userName || 'Гость')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <Input
-                          placeholder="Ваше имя"
-                          value={userName}
-                          onChange={(e) => setUserName(e.target.value)}
-                          className="mb-2"
-                        />
-                        <Textarea
-                          placeholder="Добавьте комментарий..."
-                          value={commentText}
-                          onChange={(e) => setCommentText(e.target.value)}
-                          className="min-h-[80px] resize-none"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end">
-                      <Button 
-                        onClick={handleAddComment}
-                        disabled={!commentText.trim()}
-                      >
-                        <Icon name="Send" size={16} className="mr-2" />
-                        Отправить
-                      </Button>
-                    </div>
-                  </div>
-
                   <div className="space-y-4">
-                    {videoComments.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Icon name="MessageCircle" size={48} className="mx-auto mb-2 opacity-30" />
-                        <p>Пока нет комментариев. Будьте первым!</p>
+                    <div>
+                      <div className="flex items-start justify-between mb-2">
+                        <Badge variant="secondary">{currentVideo.category}</Badge>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => setCurrentVideo(null)}
+                        >
+                          <Icon name="X" size={20} />
+                        </Button>
                       </div>
-                    ) : (
-                      videoComments.map((comment) => (
-                        <div key={comment.id} className="flex gap-3 animate-fade-in">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback className="bg-secondary">
-                              {getInitials(comment.author)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 bg-muted rounded-lg p-3">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-sm">{comment.author}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {formatTimeAgo(comment.timestamp)}
-                              </span>
-                            </div>
-                            <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
-                          </div>
-                        </div>
-                      ))
-                    )}
+                      <h2 className="text-2xl font-bold mb-2 text-foreground">{currentVideo.title}</h2>
+                      <p className="text-muted-foreground mb-4">{currentVideo.description}</p>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                        <span className="flex items-center gap-1">
+                          <Icon name="Eye" size={16} />
+                          {formatNumber(currentVideo.views)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Icon name="ThumbsUp" size={16} />
+                          {formatNumber(getVideoLikes(currentVideo.id, currentVideo.likes))}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Icon name="Clock" size={16} />
+                          {currentVideo.duration}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={likedVideos.includes(currentVideo.id) ? "default" : "outline"}
+                          onClick={() => handleLike(currentVideo.id)}
+                          className="flex-1"
+                        >
+                          <Icon name="ThumbsUp" size={16} className="mr-2" />
+                          {likedVideos.includes(currentVideo.id) ? 'Понравилось' : 'Нравится'}
+                        </Button>
+                        <Button
+                          variant={favoriteVideos.includes(currentVideo.id) ? "default" : "outline"}
+                          onClick={() => handleFavorite(currentVideo.id)}
+                        >
+                          <Icon name="Star" size={16} />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={(e) => handleShare(currentVideo, e)}
+                        >
+                          <Icon name="Share2" size={16} />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -634,7 +495,20 @@ export default function Index() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {recommendedVideos.map((video, index) => (
-                <VideoCard key={video.id} video={video} index={index} />
+                <VideoCard
+                  key={video.id}
+                  video={video}
+                  index={index}
+                  likedVideos={likedVideos}
+                  favoriteVideos={favoriteVideos}
+                  watchedVideos={watchedVideos}
+                  onVideoClick={handleVideoClick}
+                  onLike={toggleLike}
+                  onFavorite={toggleFavorite}
+                  onShare={handleShare}
+                  getVideoLikes={getVideoLikes}
+                  formatNumber={formatNumber}
+                />
               ))}
             </div>
           </div>
@@ -672,7 +546,20 @@ export default function Index() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredVideos.map((video, index) => (
-                <VideoCard key={video.id} video={video} index={index} />
+                <VideoCard
+                  key={video.id}
+                  video={video}
+                  index={index}
+                  likedVideos={likedVideos}
+                  favoriteVideos={favoriteVideos}
+                  watchedVideos={watchedVideos}
+                  onVideoClick={handleVideoClick}
+                  onLike={toggleLike}
+                  onFavorite={toggleFavorite}
+                  onShare={handleShare}
+                  getVideoLikes={getVideoLikes}
+                  formatNumber={formatNumber}
+                />
               ))}
             </div>
           )}
@@ -685,170 +572,48 @@ export default function Index() {
         </div>
       </footer>
 
-      <Dialog open={playerDialogOpen} onOpenChange={setPlayerDialogOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>{playerVideo?.title}</DialogTitle>
-            <DialogDescription>
-              {playerVideo?.description}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="aspect-video rounded-lg overflow-hidden bg-black">
-              {playerVideo && (
-                <iframe
-                  width="100%"
-                  height="100%"
-                  src={`https://www.youtube.com/embed/${playerVideo.youtubeId}?autoplay=1`}
-                  title={playerVideo.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full"
-                />
-              )}
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => playerVideo && handleLike(playerVideo.id)}
-                  className={likedVideos.includes(playerVideo?.id || 0) ? 'text-red-500' : ''}
-                >
-                  <Icon name="Heart" size={20} fill={likedVideos.includes(playerVideo?.id || 0) ? 'currentColor' : 'none'} />
-                  <span className="ml-1">{playerVideo?.likes}</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => playerVideo && handleOpenComments(playerVideo)}
-                >
-                  <Icon name="MessageCircle" size={20} />
-                  <span className="ml-1">Комментарии</span>
-                </Button>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => playerVideo && handleFavorite(playerVideo.id)}
-                  className={favoriteVideos.includes(playerVideo?.id || 0) ? 'text-yellow-500' : ''}
-                >
-                  <Icon name="Star" size={20} fill={favoriteVideos.includes(playerVideo?.id || 0) ? 'currentColor' : 'none'} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    if (playerVideo) {
-                      setShareVideo(playerVideo);
-                      setShareDialogOpen(true);
-                    }
-                  }}
-                >
-                  <Icon name="Share2" size={20} />
-                </Button>
-              </div>
-            </div>
+      <VideoPlayerDialog
+        open={playerDialogOpen}
+        onOpenChange={setPlayerDialogOpen}
+        video={playerVideo}
+        likedVideos={likedVideos}
+        favoriteVideos={favoriteVideos}
+        onLike={handleLike}
+        onFavorite={handleFavorite}
+        onShare={(video) => {
+          setShareVideo(video);
+          setShareDialogOpen(true);
+        }}
+        onOpenComments={handleOpenComments}
+        onSimilarVideoClick={handleSimilarVideoClick}
+        getSimilarVideos={getSimilarVideos}
+        formatNumber={formatNumber}
+      />
 
-            {playerVideo && getSimilarVideos(playerVideo).length > 0 && (
-              <div className="border-t pt-4">
-                <h3 className="text-sm font-semibold mb-3 text-foreground">Похожие видео</h3>
-                <div className="grid grid-cols-1 gap-3">
-                  {getSimilarVideos(playerVideo).map((video) => (
-                    <div
-                      key={video.id}
-                      onClick={() => handleSimilarVideoClick(video)}
-                      className="flex gap-3 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                    >
-                      <div className="relative w-32 h-20 flex-shrink-0">
-                        <img
-                          src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
-                          alt={video.title}
-                          className="w-full h-full object-cover rounded"
-                        />
-                        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 rounded">
-                          {video.duration}
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium line-clamp-2 text-foreground mb-1">
-                          {video.title}
-                        </h4>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Badge variant="secondary" className="text-xs">
-                            {video.category}
-                          </Badge>
-                          <span>{(video.views / 1000).toFixed(0)}K просмотров</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CommentsDialog
+        video={currentVideo}
+        videoComments={videoComments}
+        commentText={commentText}
+        userName={userName}
+        onCommentTextChange={setCommentText}
+        onUserNameChange={setUserName}
+        onAddComment={handleAddComment}
+        onClose={() => setCurrentVideo(null)}
+        getInitials={getInitials}
+        formatTimeAgo={formatTimeAgo}
+      />
 
-      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Поделиться видео</DialogTitle>
-            <DialogDescription>
-              {shareVideo?.title}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 pt-4">
-            <Button 
-              onClick={shareToVK} 
-              className="w-full justify-start gap-3 h-12"
-              variant="outline"
-            >
-              <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-                VK
-              </div>
-              <span>ВКонтакте</span>
-            </Button>
-            
-            <Button 
-              onClick={shareToTelegram} 
-              className="w-full justify-start gap-3 h-12"
-              variant="outline"
-            >
-              <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
-                <Icon name="Send" size={18} className="text-white" />
-              </div>
-              <span>Telegram</span>
-            </Button>
-            
-            <Button 
-              onClick={shareToWhatsApp} 
-              className="w-full justify-start gap-3 h-12"
-              variant="outline"
-            >
-              <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
-                <Icon name="MessageCircle" size={18} className="text-white" />
-              </div>
-              <span>WhatsApp</span>
-            </Button>
-
-            <div className="pt-4 border-t">
-              <div className="flex gap-2">
-                <Input 
-                  value={shareVideo ? getShareUrl(shareVideo) : ''} 
-                  readOnly 
-                  className="flex-1"
-                />
-                <Button onClick={copyToClipboard} variant={copySuccess ? "default" : "secondary"}>
-                  <Icon name={copySuccess ? "Check" : "Copy"} size={16} />
-                  {copySuccess ? 'Скопировано!' : 'Копировать'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        video={shareVideo}
+        copySuccess={copySuccess}
+        onShareToVK={shareToVK}
+        onShareToTelegram={shareToTelegram}
+        onShareToWhatsApp={shareToWhatsApp}
+        onCopyToClipboard={copyToClipboard}
+        getShareUrl={getShareUrl}
+      />
     </div>
   );
 }
