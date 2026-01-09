@@ -6,6 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Icon from '@/components/ui/icon';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface Video {
   id: number;
@@ -120,6 +127,9 @@ export default function Index() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
   const [userName, setUserName] = useState('');
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareVideo, setShareVideo] = useState<Video | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -226,6 +236,46 @@ export default function Index() {
     
     setComments([...comments, newComment]);
     setCommentText('');
+  };
+
+  const handleShare = (video: Video, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setShareVideo(video);
+    setShareDialogOpen(true);
+    setCopySuccess(false);
+  };
+
+  const getShareUrl = (video: Video) => {
+    return `${window.location.origin}?video=${video.id}`;
+  };
+
+  const shareToVK = () => {
+    if (!shareVideo) return;
+    const url = getShareUrl(shareVideo);
+    window.open(`https://vk.com/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(shareVideo.title)}`, '_blank');
+  };
+
+  const shareToTelegram = () => {
+    if (!shareVideo) return;
+    const url = getShareUrl(shareVideo);
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareVideo.title)}`, '_blank');
+  };
+
+  const shareToWhatsApp = () => {
+    if (!shareVideo) return;
+    const url = getShareUrl(shareVideo);
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareVideo.title + ' ' + url)}`, '_blank');
+  };
+
+  const copyToClipboard = async () => {
+    if (!shareVideo) return;
+    try {
+      await navigator.clipboard.writeText(getShareUrl(shareVideo));
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   const formatTimeAgo = (timestamp: number) => {
@@ -440,7 +490,7 @@ export default function Index() {
                         className={favoriteVideos.includes(currentVideo.id) ? "fill-current" : ""}
                       />
                     </Button>
-                    <Button size="icon" variant="ghost">
+                    <Button size="icon" variant="ghost" onClick={() => handleShare(currentVideo)}>
                       <Icon name="Share2" size={20} />
                     </Button>
                   </div>
@@ -564,6 +614,65 @@ export default function Index() {
           <p>© 2024 ЛайфХаки — Делимся полезными советами</p>
         </div>
       </footer>
+
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Поделиться видео</DialogTitle>
+            <DialogDescription>
+              {shareVideo?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-4">
+            <Button 
+              onClick={shareToVK} 
+              className="w-full justify-start gap-3 h-12"
+              variant="outline"
+            >
+              <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                VK
+              </div>
+              <span>ВКонтакте</span>
+            </Button>
+            
+            <Button 
+              onClick={shareToTelegram} 
+              className="w-full justify-start gap-3 h-12"
+              variant="outline"
+            >
+              <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                <Icon name="Send" size={18} className="text-white" />
+              </div>
+              <span>Telegram</span>
+            </Button>
+            
+            <Button 
+              onClick={shareToWhatsApp} 
+              className="w-full justify-start gap-3 h-12"
+              variant="outline"
+            >
+              <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                <Icon name="MessageCircle" size={18} className="text-white" />
+              </div>
+              <span>WhatsApp</span>
+            </Button>
+
+            <div className="pt-4 border-t">
+              <div className="flex gap-2">
+                <Input 
+                  value={shareVideo ? getShareUrl(shareVideo) : ''} 
+                  readOnly 
+                  className="flex-1"
+                />
+                <Button onClick={copyToClipboard} variant={copySuccess ? "default" : "secondary"}>
+                  <Icon name={copySuccess ? "Check" : "Copy"} size={16} />
+                  {copySuccess ? 'Скопировано!' : 'Копировать'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
