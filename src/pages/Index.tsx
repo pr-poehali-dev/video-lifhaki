@@ -54,6 +54,12 @@ export default function Index() {
         document.documentElement.classList.add('dark');
       }
     }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category');
+    if (categoryParam && categories.includes(categoryParam)) {
+      setSelectedCategory(categoryParam);
+    }
   }, []);
 
   useEffect(() => {
@@ -406,22 +412,41 @@ export default function Index() {
           <h2 className="text-lg font-semibold mb-4 text-foreground">Категории</h2>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? 'default' : 'outline'}
-                onClick={() => setSelectedCategory(category)}
-                className="rounded-full flex items-center gap-1"
-              >
-                {category === 'Избранное' && <Icon name="Star" size={14} />}
-                {category === 'История' && <Icon name="History" size={14} />}
-                {category}
-                {category === 'Избранное' && favoriteVideos.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5">{favoriteVideos.length}</Badge>
-                )}
-                {category === 'История' && watchedVideos.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5">{watchedVideos.length}</Badge>
-                )}
-              </Button>
+              <div key={category} className="relative group">
+                <Button
+                  variant={selectedCategory === category ? 'default' : 'outline'}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('category', category);
+                    window.history.pushState({}, '', url);
+                  }}
+                  className="rounded-full flex items-center gap-1"
+                >
+                  {category === 'Избранное' && <Icon name="Star" size={14} />}
+                  {category === 'История' && <Icon name="History" size={14} />}
+                  {category}
+                  {category === 'Избранное' && favoriteVideos.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5">{favoriteVideos.length}</Badge>
+                  )}
+                  {category === 'История' && watchedVideos.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5">{watchedVideos.length}</Badge>
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute -right-1 -top-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('category', category);
+                    await navigator.clipboard.writeText(url.toString());
+                  }}
+                >
+                  <Icon name="Link" size={12} />
+                </Button>
+              </div>
             ))}
           </div>
         </div>
