@@ -130,6 +130,8 @@ export default function Index() {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareVideo, setShareVideo] = useState<Video | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [playerDialogOpen, setPlayerDialogOpen] = useState(false);
+  const [playerVideo, setPlayerVideo] = useState<Video | null>(null);
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -197,10 +199,16 @@ export default function Index() {
   }, [comments, currentVideo]);
 
   const handleVideoClick = (video: Video) => {
-    setCurrentVideo(video);
+    setPlayerVideo(video);
+    setPlayerDialogOpen(true);
     if (!watchedVideos.includes(video.id)) {
       setWatchedVideos([...watchedVideos, video.id]);
     }
+  };
+
+  const handleOpenComments = (video: Video) => {
+    setCurrentVideo(video);
+    setPlayerDialogOpen(false);
   };
 
   const toggleLike = (videoId: number, e: React.MouseEvent) => {
@@ -614,6 +622,75 @@ export default function Index() {
           <p>© 2024 ЛайфХаки — Делимся полезными советами</p>
         </div>
       </footer>
+
+      <Dialog open={playerDialogOpen} onOpenChange={setPlayerDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{playerVideo?.title}</DialogTitle>
+            <DialogDescription>
+              {playerVideo?.description}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="aspect-video rounded-lg overflow-hidden bg-black">
+              {playerVideo && (
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src={`https://www.youtube.com/embed/${playerVideo.youtubeId}?autoplay=1`}
+                  title={playerVideo.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
+              )}
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => playerVideo && handleLike(playerVideo.id)}
+                  className={likedVideos.includes(playerVideo?.id || 0) ? 'text-red-500' : ''}
+                >
+                  <Icon name="Heart" size={20} fill={likedVideos.includes(playerVideo?.id || 0) ? 'currentColor' : 'none'} />
+                  <span className="ml-1">{playerVideo?.likes}</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => playerVideo && handleOpenComments(playerVideo)}
+                >
+                  <Icon name="MessageCircle" size={20} />
+                  <span className="ml-1">Комментарии</span>
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => playerVideo && handleFavorite(playerVideo.id)}
+                  className={favoriteVideos.includes(playerVideo?.id || 0) ? 'text-yellow-500' : ''}
+                >
+                  <Icon name="Star" size={20} fill={favoriteVideos.includes(playerVideo?.id || 0) ? 'currentColor' : 'none'} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (playerVideo) {
+                      setShareVideo(playerVideo);
+                      setShareDialogOpen(true);
+                    }
+                  }}
+                >
+                  <Icon name="Share2" size={20} />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
         <DialogContent>
