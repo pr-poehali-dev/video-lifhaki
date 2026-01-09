@@ -28,6 +28,7 @@ export default function Index() {
   const [watchHistory, setWatchHistory] = useState<{ videoId: number; timestamp: number }[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [durationFilter, setDurationFilter] = useState<'all' | 'short' | 'medium' | 'long'>('all');
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -87,6 +88,13 @@ export default function Index() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [searchOpen]);
 
+  const parseDuration = (duration: string): number => {
+    const parts = duration.split(':').map(Number);
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    return 0;
+  };
+
   const filteredVideos = useMemo(() => {
     let videos = mockVideos;
 
@@ -110,8 +118,18 @@ export default function Index() {
       );
     }
 
+    if (durationFilter !== 'all') {
+      videos = videos.filter(video => {
+        const seconds = parseDuration(video.duration);
+        if (durationFilter === 'short') return seconds < 300;
+        if (durationFilter === 'medium') return seconds >= 300 && seconds < 900;
+        if (durationFilter === 'long') return seconds >= 900;
+        return true;
+      });
+    }
+
     return videos;
-  }, [selectedCategory, favoriteVideos, watchedVideos, watchHistory, searchQuery]);
+  }, [selectedCategory, favoriteVideos, watchedVideos, watchHistory, searchQuery, durationFilter]);
 
   const recommendedVideos = useMemo(() => {
     if (watchedVideos.length === 0) return mockVideos.slice(0, 3);
@@ -366,6 +384,44 @@ export default function Index() {
                 )}
               </Button>
             ))}
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">Длительность</h2>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={durationFilter === 'all' ? 'default' : 'outline'}
+              onClick={() => setDurationFilter('all')}
+              className="rounded-full flex items-center gap-1"
+            >
+              <Icon name="List" size={14} />
+              Все
+            </Button>
+            <Button
+              variant={durationFilter === 'short' ? 'default' : 'outline'}
+              onClick={() => setDurationFilter('short')}
+              className="rounded-full flex items-center gap-1"
+            >
+              <Icon name="Zap" size={14} />
+              Короткие (&lt;5 мин)
+            </Button>
+            <Button
+              variant={durationFilter === 'medium' ? 'default' : 'outline'}
+              onClick={() => setDurationFilter('medium')}
+              className="rounded-full flex items-center gap-1"
+            >
+              <Icon name="Clock" size={14} />
+              Средние (5-15 мин)
+            </Button>
+            <Button
+              variant={durationFilter === 'long' ? 'default' : 'outline'}
+              onClick={() => setDurationFilter('long')}
+              className="rounded-full flex items-center gap-1"
+            >
+              <Icon name="Film" size={14} />
+              Длинные (15+ мин)
+            </Button>
           </div>
         </div>
 
