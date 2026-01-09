@@ -116,7 +116,7 @@ const mockVideos: Video[] = [
   },
 ];
 
-const categories = ['Все', 'Дом', 'Кухня', 'Технологии', 'Красота', 'Избранное'];
+const categories = ['Все', 'История', 'Дом', 'Кухня', 'Технологии', 'Красота', 'Избранное'];
 
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState('Все');
@@ -132,6 +132,7 @@ export default function Index() {
   const [copySuccess, setCopySuccess] = useState(false);
   const [playerDialogOpen, setPlayerDialogOpen] = useState(false);
   const [playerVideo, setPlayerVideo] = useState<Video | null>(null);
+  const [watchHistory, setWatchHistory] = useState<{ videoId: number; timestamp: number }[]>([]);
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -139,12 +140,14 @@ export default function Index() {
     const savedWatched = localStorage.getItem('watchedVideos');
     const savedComments = localStorage.getItem('comments');
     const savedUserName = localStorage.getItem('userName');
+    const savedHistory = localStorage.getItem('watchHistory');
     
     if (savedLikes) setLikedVideos(JSON.parse(savedLikes));
     if (savedFavorites) setFavoriteVideos(JSON.parse(savedFavorites));
     if (savedWatched) setWatchedVideos(JSON.parse(savedWatched));
     if (savedComments) setComments(JSON.parse(savedComments));
     if (savedUserName) setUserName(savedUserName);
+    if (savedHistory) setWatchHistory(JSON.parse(savedHistory));
   }, []);
 
   useEffect(() => {
@@ -169,14 +172,24 @@ export default function Index() {
     }
   }, [userName]);
 
+  useEffect(() => {
+    localStorage.setItem('watchHistory', JSON.stringify(watchHistory));
+  }, [watchHistory]);
+
   const filteredVideos = useMemo(() => {
     if (selectedCategory === 'Избранное') {
       return mockVideos.filter(video => favoriteVideos.includes(video.id));
     }
+    if (selectedCategory === 'История') {
+      const historyMap = new Map(watchHistory.map(h => [h.videoId, h.timestamp]));
+      return mockVideos
+        .filter(video => watchedVideos.includes(video.id))
+        .sort((a, b) => (historyMap.get(b.id) || 0) - (historyMap.get(a.id) || 0));
+    }
     return selectedCategory === 'Все'
       ? mockVideos
       : mockVideos.filter(video => video.category === selectedCategory);
-  }, [selectedCategory, favoriteVideos]);
+  }, [selectedCategory, favoriteVideos, watchedVideos, watchHistory]);
 
   const recommendedVideos = useMemo(() => {
     if (watchedVideos.length === 0) return mockVideos.slice(0, 3);
@@ -204,6 +217,10 @@ export default function Index() {
     if (!watchedVideos.includes(video.id)) {
       setWatchedVideos([...watchedVideos, video.id]);
     }
+    setWatchHistory(prev => [
+      ...prev.filter(h => h.videoId !== video.id),
+      { videoId: video.id, timestamp: Date.now() }
+    ]);
   };
 
   const handleOpenComments = (video: Video) => {
@@ -216,6 +233,10 @@ export default function Index() {
     if (!watchedVideos.includes(video.id)) {
       setWatchedVideos([...watchedVideos, video.id]);
     }
+    setWatchHistory(prev => [
+      ...prev.filter(h => h.videoId !== video.id),
+      { videoId: video.id, timestamp: Date.now() }
+    ]);
   };
 
   const toggleLike = (videoId: number, e: React.MouseEvent) => {
@@ -447,9 +468,13 @@ export default function Index() {
                 className="rounded-full flex items-center gap-1"
               >
                 {category === 'Избранное' && <Icon name="Star" size={14} />}
+                {category === 'История' && <Icon name="History" size={14} />}
                 {category}
                 {category === 'Избранное' && favoriteVideos.length > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 px-1.5">{favoriteVideos.length}</Badge>
+                )}
+                {category === 'История' && watchedVideos.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5">{watchedVideos.length}</Badge>
                 )}
               </Button>
             ))}
@@ -612,13 +637,19 @@ export default function Index() {
 
         <div>
           <h2 className="text-lg font-semibold mb-4 text-foreground">
-            {selectedCategory === 'Избранное' ? 'Избранные видео' : 'Все видео'}
+            {selectedCategory === 'Избранное' ? 'Избранные видео' : selectedCategory === 'История' ? 'История просмотров' : 'Все видео'}
           </h2>
           {selectedCategory === 'Избранное' && filteredVideos.length === 0 ? (
             <div className="text-center py-16">
               <Icon name="Star" size={64} className="text-muted-foreground/30 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">Нет избранных видео</h3>
               <p className="text-muted-foreground">Добавьте лайфхаки в избранное, нажав на звёздочку</p>
+            </div>
+          ) : selectedCategory === 'История' && filteredVideos.length === 0 ? (
+            <div className="text-center py-16">
+              <Icon name="History" size={64} className="text-muted-foreground/30 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">История пуста</h3>
+              <p className="text-muted-foreground">Начните смотреть видео, чтобы они появились здесь</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
