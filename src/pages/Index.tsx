@@ -71,6 +71,22 @@ export default function Index() {
     localStorage.setItem('watchHistory', JSON.stringify(watchHistory));
   }, [watchHistory]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if (e.key === 'Escape' && searchOpen) {
+        setSearchOpen(false);
+        setSearchQuery('');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchOpen]);
+
   const filteredVideos = useMemo(() => {
     let videos = mockVideos;
 
