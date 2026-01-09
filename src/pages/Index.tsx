@@ -2,6 +2,9 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Icon from '@/components/ui/icon';
 
 interface Video {
@@ -13,6 +16,14 @@ interface Video {
   views: number;
   likes: number;
   description: string;
+}
+
+interface Comment {
+  id: string;
+  videoId: number;
+  author: string;
+  text: string;
+  timestamp: number;
 }
 
 const mockVideos: Video[] = [
@@ -106,15 +117,22 @@ export default function Index() {
   const [likedVideos, setLikedVideos] = useState<number[]>([]);
   const [favoriteVideos, setFavoriteVideos] = useState<number[]>([]);
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentText, setCommentText] = useState('');
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
     const savedFavorites = localStorage.getItem('favoriteVideos');
     const savedWatched = localStorage.getItem('watchedVideos');
+    const savedComments = localStorage.getItem('comments');
+    const savedUserName = localStorage.getItem('userName');
     
     if (savedLikes) setLikedVideos(JSON.parse(savedLikes));
     if (savedFavorites) setFavoriteVideos(JSON.parse(savedFavorites));
     if (savedWatched) setWatchedVideos(JSON.parse(savedWatched));
+    if (savedComments) setComments(JSON.parse(savedComments));
+    if (savedUserName) setUserName(savedUserName);
   }, []);
 
   useEffect(() => {
@@ -128,6 +146,16 @@ export default function Index() {
   useEffect(() => {
     localStorage.setItem('watchedVideos', JSON.stringify(watchedVideos));
   }, [watchedVideos]);
+
+  useEffect(() => {
+    localStorage.setItem('comments', JSON.stringify(comments));
+  }, [comments]);
+
+  useEffect(() => {
+    if (userName) {
+      localStorage.setItem('userName', userName);
+    }
+  }, [userName]);
 
   const filteredVideos = useMemo(() => {
     if (selectedCategory === 'Избранное') {
@@ -150,6 +178,13 @@ export default function Index() {
     
     return sameCategoryVideos.slice(0, 3);
   }, [watchedVideos]);
+
+  const videoComments = useMemo(() => {
+    if (!currentVideo) return [];
+    return comments
+      .filter(c => c.videoId === currentVideo.id)
+      .sort((a, b) => b.timestamp - a.timestamp);
+  }, [comments, currentVideo]);
 
   const handleVideoClick = (video: Video) => {
     setCurrentVideo(video);
@@ -176,6 +211,32 @@ export default function Index() {
     );
   };
 
+  const handleAddComment = () => {
+    if (!currentVideo || !commentText.trim()) return;
+    
+    const displayName = userName.trim() || 'Гость';
+    
+    const newComment: Comment = {
+      id: Date.now().toString(),
+      videoId: currentVideo.id,
+      author: displayName,
+      text: commentText.trim(),
+      timestamp: Date.now()
+    };
+    
+    setComments([...comments, newComment]);
+    setCommentText('');
+  };
+
+  const formatTimeAgo = (timestamp: number) => {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    
+    if (seconds < 60) return 'только что';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} мин назад`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} ч назад`;
+    return `${Math.floor(seconds / 86400)} дн назад`;
+  };
+
   const getVideoLikes = (videoId: number, baseLikes: number) => {
     return baseLikes + (likedVideos.includes(videoId) ? 1 : 0);
   };
@@ -184,6 +245,15 @@ export default function Index() {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const VideoCard = ({ video, index }: { video: Video; index: number }) => (
@@ -340,6 +410,10 @@ export default function Index() {
                         <Icon name="Clock" size={16} />
                         {currentVideo.duration}
                       </span>
+                      <span className="flex items-center gap-1">
+                        <Icon name="MessageCircle" size={16} />
+                        {videoComments.length} {videoComments.length === 1 ? 'комментарий' : 'комментариев'}
+                      </span>
                     </div>
                     <Badge variant="secondary">{currentVideo.category}</Badge>
                   </div>
@@ -372,11 +446,79 @@ export default function Index() {
                   </div>
                 </div>
                 <p className="text-muted-foreground leading-relaxed mb-4">{currentVideo.description}</p>
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-4 text-sm mb-6">
                   <span className="flex items-center gap-1 text-foreground">
                     <Icon name="ThumbsUp" size={16} />
                     {formatNumber(getVideoLikes(currentVideo.id, currentVideo.likes))} лайков
                   </span>
+                </div>
+
+                <div className="border-t border-border pt-6">
+                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Icon name="MessageCircle" size={20} />
+                    Комментарии ({videoComments.length})
+                  </h4>
+                  
+                  <div className="mb-6">
+                    <div className="flex gap-3 mb-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-primary text-white">
+                          {getInitials(userName || 'Гость')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <Input
+                          placeholder="Ваше имя"
+                          value={userName}
+                          onChange={(e) => setUserName(e.target.value)}
+                          className="mb-2"
+                        />
+                        <Textarea
+                          placeholder="Добавьте комментарий..."
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          className="min-h-[80px] resize-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button 
+                        onClick={handleAddComment}
+                        disabled={!commentText.trim()}
+                      >
+                        <Icon name="Send" size={16} className="mr-2" />
+                        Отправить
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {videoComments.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Icon name="MessageCircle" size={48} className="mx-auto mb-2 opacity-30" />
+                        <p>Пока нет комментариев. Будьте первым!</p>
+                      </div>
+                    ) : (
+                      videoComments.map((comment) => (
+                        <div key={comment.id} className="flex gap-3 animate-fade-in">
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback className="bg-secondary">
+                              {getInitials(comment.author)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 bg-muted rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-semibold text-sm">{comment.author}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatTimeAgo(comment.timestamp)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
