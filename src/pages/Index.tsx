@@ -30,6 +30,7 @@ export default function Index() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [durationFilter, setDurationFilter] = useState<'all' | 'short' | 'medium' | 'long'>('all');
   const [sortBy, setSortBy] = useState<'popular' | 'date' | 'likes'>('popular');
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -38,6 +39,7 @@ export default function Index() {
     const savedComments = localStorage.getItem('comments');
     const savedUserName = localStorage.getItem('userName');
     const savedHistory = localStorage.getItem('watchHistory');
+    const savedTheme = localStorage.getItem('darkMode');
     
     if (savedLikes) setLikedVideos(JSON.parse(savedLikes));
     if (savedFavorites) setFavoriteVideos(JSON.parse(savedFavorites));
@@ -45,6 +47,13 @@ export default function Index() {
     if (savedComments) setComments(JSON.parse(savedComments));
     if (savedUserName) setUserName(savedUserName);
     if (savedHistory) setWatchHistory(JSON.parse(savedHistory));
+    if (savedTheme) {
+      const isDark = JSON.parse(savedTheme);
+      setIsDarkMode(isDark);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -72,6 +81,15 @@ export default function Index() {
   useEffect(() => {
     localStorage.setItem('watchHistory', JSON.stringify(watchHistory));
   }, [watchHistory]);
+
+  useEffect(() => {
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -361,6 +379,13 @@ export default function Index() {
                       {favoriteVideos.length}
                     </Badge>
                   )}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setIsDarkMode(!isDarkMode)}
+                  >
+                    <Icon name={isDarkMode ? "Sun" : "Moon"} size={20} />
+                  </Button>
                   <div className="relative group">
                     <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)}>
                       <Icon name="Search" size={20} />
