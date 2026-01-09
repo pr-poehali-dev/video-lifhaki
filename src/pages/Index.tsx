@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import VideoCard from '@/components/VideoCard';
 import VideoPlayerDialog from '@/components/VideoPlayerDialog';
@@ -25,6 +26,8 @@ export default function Index() {
   const [playerDialogOpen, setPlayerDialogOpen] = useState(false);
   const [playerVideo, setPlayerVideo] = useState<Video | null>(null);
   const [watchHistory, setWatchHistory] = useState<{ videoId: number; timestamp: number }[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -69,19 +72,30 @@ export default function Index() {
   }, [watchHistory]);
 
   const filteredVideos = useMemo(() => {
+    let videos = mockVideos;
+
     if (selectedCategory === 'Избранное') {
-      return mockVideos.filter(video => favoriteVideos.includes(video.id));
-    }
-    if (selectedCategory === 'История') {
+      videos = mockVideos.filter(video => favoriteVideos.includes(video.id));
+    } else if (selectedCategory === 'История') {
       const historyMap = new Map(watchHistory.map(h => [h.videoId, h.timestamp]));
-      return mockVideos
+      videos = mockVideos
         .filter(video => watchedVideos.includes(video.id))
         .sort((a, b) => (historyMap.get(b.id) || 0) - (historyMap.get(a.id) || 0));
+    } else if (selectedCategory !== 'Все') {
+      videos = mockVideos.filter(video => video.category === selectedCategory);
     }
-    return selectedCategory === 'Все'
-      ? mockVideos
-      : mockVideos.filter(video => video.category === selectedCategory);
-  }, [selectedCategory, favoriteVideos, watchedVideos, watchHistory]);
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      videos = videos.filter(video =>
+        video.title.toLowerCase().includes(query) ||
+        video.description.toLowerCase().includes(query) ||
+        video.category.toLowerCase().includes(query)
+      );
+    }
+
+    return videos;
+  }, [selectedCategory, favoriteVideos, watchedVideos, watchHistory, searchQuery]);
 
   const recommendedVideos = useMemo(() => {
     if (watchedVideos.length === 0) return mockVideos.slice(0, 3);
@@ -265,21 +279,45 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <Icon name="Lightbulb" className="text-primary" size={28} />
               ЛайфХаки
             </h1>
-            <div className="flex items-center gap-2">
-              {favoriteVideos.length > 0 && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Icon name="Star" size={12} />
-                  {favoriteVideos.length}
-                </Badge>
+            <div className="flex items-center gap-2 flex-1 max-w-md">
+              {searchOpen ? (
+                <div className="flex items-center gap-2 flex-1 animate-fade-in">
+                  <Input
+                    placeholder="Поиск лайфхаков..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1"
+                    autoFocus
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setSearchOpen(false);
+                      setSearchQuery('');
+                    }}
+                  >
+                    <Icon name="X" size={20} />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 ml-auto">
+                  {favoriteVideos.length > 0 && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Icon name="Star" size={12} />
+                      {favoriteVideos.length}
+                    </Badge>
+                  )}
+                  <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)}>
+                    <Icon name="Search" size={20} />
+                  </Button>
+                </div>
               )}
-              <Button variant="ghost" size="icon">
-                <Icon name="Search" size={20} />
-              </Button>
             </div>
           </div>
         </div>
@@ -415,9 +453,9 @@ export default function Index() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground">
-              {selectedCategory === 'Избранное' ? 'Избранные видео' : selectedCategory === 'История' ? 'История просмотров' : 'Все видео'}
+              {searchQuery ? `Результаты поиска: "${searchQuery}"` : selectedCategory === 'Избранное' ? 'Избранные видео' : selectedCategory === 'История' ? 'История просмотров' : 'Все видео'}
             </h2>
-            {selectedCategory === 'История' && watchedVideos.length > 0 && (
+            {selectedCategory === 'История' && watchedVideos.length > 0 && !searchQuery && (
               <Button
                 variant="outline"
                 size="sm"
@@ -429,7 +467,13 @@ export default function Index() {
               </Button>
             )}
           </div>
-          {selectedCategory === 'Избранное' && filteredVideos.length === 0 ? (
+          {searchQuery && filteredVideos.length === 0 ? (
+            <div className="text-center py-16">
+              <Icon name="Search" size={64} className="text-muted-foreground/30 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">Ничего не найдено</h3>
+              <p className="text-muted-foreground">Попробуйте изменить запрос или очистить фильтры</p>
+            </div>
+          ) : selectedCategory === 'Избранное' && filteredVideos.length === 0 ? (
             <div className="text-center py-16">
               <Icon name="Star" size={64} className="text-muted-foreground/30 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">Нет избранных видео</h3>
