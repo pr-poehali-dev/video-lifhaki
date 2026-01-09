@@ -8,17 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-
-interface Video {
-  id: number;
-  title: string;
-  category: string;
-  youtubeId: string;
-  duration: string;
-  views: number;
-  likes: number;
-  description: string;
-}
+import { Video } from '@/types/video';
 
 interface VideoPlayerDialogProps {
   open: boolean;

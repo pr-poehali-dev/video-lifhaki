@@ -2,17 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
-
-interface Video {
-  id: number;
-  title: string;
-  category: string;
-  youtubeId: string;
-  duration: string;
-  views: number;
-  likes: number;
-  description: string;
-}
+import { Video } from '@/types/video';
 
 interface VideoCardProps {
   video: Video;
