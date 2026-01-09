@@ -29,6 +29,7 @@ export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [durationFilter, setDurationFilter] = useState<'all' | 'short' | 'medium' | 'long'>('all');
+  const [sortBy, setSortBy] = useState<'popular' | 'date' | 'likes'>('popular');
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -128,8 +129,21 @@ export default function Index() {
       });
     }
 
+    if (selectedCategory !== 'История') {
+      videos = [...videos].sort((a, b) => {
+        if (sortBy === 'popular') return b.views - a.views;
+        if (sortBy === 'date') return b.id - a.id;
+        if (sortBy === 'likes') {
+          const aLikes = getVideoLikes(a.id, a.likes);
+          const bLikes = getVideoLikes(b.id, b.likes);
+          return bLikes - aLikes;
+        }
+        return 0;
+      });
+    }
+
     return videos;
-  }, [selectedCategory, favoriteVideos, watchedVideos, watchHistory, searchQuery, durationFilter]);
+  }, [selectedCategory, favoriteVideos, watchedVideos, watchHistory, searchQuery, durationFilter, sortBy, likedVideos]);
 
   const recommendedVideos = useMemo(() => {
     if (watchedVideos.length === 0) return mockVideos.slice(0, 3);
@@ -421,6 +435,36 @@ export default function Index() {
             >
               <Icon name="Film" size={14} />
               Длинные (15+ мин)
+            </Button>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">Сортировка</h2>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={sortBy === 'popular' ? 'default' : 'outline'}
+              onClick={() => setSortBy('popular')}
+              className="rounded-full flex items-center gap-1"
+            >
+              <Icon name="TrendingUp" size={14} />
+              По популярности
+            </Button>
+            <Button
+              variant={sortBy === 'date' ? 'default' : 'outline'}
+              onClick={() => setSortBy('date')}
+              className="rounded-full flex items-center gap-1"
+            >
+              <Icon name="Calendar" size={14} />
+              По дате
+            </Button>
+            <Button
+              variant={sortBy === 'likes' ? 'default' : 'outline'}
+              onClick={() => setSortBy('likes')}
+              className="rounded-full flex items-center gap-1"
+            >
+              <Icon name="ThumbsUp" size={14} />
+              По лайкам
             </Button>
           </div>
         </div>
