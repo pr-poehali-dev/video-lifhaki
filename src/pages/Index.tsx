@@ -329,9 +329,14 @@ export default function Index() {
                       {favoriteVideos.length}
                     </Badge>
                   )}
-                  <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)}>
-                    <Icon name="Search" size={20} />
-                  </Button>
+                  <div className="relative group">
+                    <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)}>
+                      <Icon name="Search" size={20} />
+                    </Button>
+                    <div className="absolute right-0 top-full mt-2 px-2 py-1 bg-black/80 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      Ctrl+K
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
