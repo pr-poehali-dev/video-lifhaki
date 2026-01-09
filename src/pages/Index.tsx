@@ -211,6 +211,13 @@ export default function Index() {
     setPlayerDialogOpen(false);
   };
 
+  const handleSimilarVideoClick = (video: Video) => {
+    setPlayerVideo(video);
+    if (!watchedVideos.includes(video.id)) {
+      setWatchedVideos([...watchedVideos, video.id]);
+    }
+  };
+
   const toggleLike = (videoId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setLikedVideos(prev => 
@@ -284,6 +291,12 @@ export default function Index() {
     } catch (err) {
       console.error('Failed to copy:', err);
     }
+  };
+
+  const getSimilarVideos = (currentVideo: Video) => {
+    return mockVideos
+      .filter(v => v.id !== currentVideo.id && v.category === currentVideo.category)
+      .slice(0, 3);
   };
 
   const formatTimeAgo = (timestamp: number) => {
@@ -688,6 +701,43 @@ export default function Index() {
                 </Button>
               </div>
             </div>
+
+            {playerVideo && getSimilarVideos(playerVideo).length > 0 && (
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-semibold mb-3 text-foreground">Похожие видео</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {getSimilarVideos(playerVideo).map((video) => (
+                    <div
+                      key={video.id}
+                      onClick={() => handleSimilarVideoClick(video)}
+                      className="flex gap-3 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                    >
+                      <div className="relative w-32 h-20 flex-shrink-0">
+                        <img
+                          src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
+                          alt={video.title}
+                          className="w-full h-full object-cover rounded"
+                        />
+                        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 rounded">
+                          {video.duration}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium line-clamp-2 text-foreground mb-1">
+                          {video.title}
+                        </h4>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Badge variant="secondary" className="text-xs">
+                            {video.category}
+                          </Badge>
+                          <span>{(video.views / 1000).toFixed(0)}K просмотров</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
