@@ -15,6 +15,7 @@ interface VideoCardProps {
   onFavorite: (videoId: number, e: React.MouseEvent) => void;
   onShare: (video: Video, e: React.MouseEvent) => void;
   getVideoLikes: (videoId: number, baseLikes: number) => number;
+  getVideoViews: (videoId: number, baseViews: number) => number;
   formatNumber: (num: number) => string;
 }
 
@@ -29,6 +30,7 @@ export default function VideoCard({
   onFavorite,
   onShare,
   getVideoLikes,
+  getVideoViews,
   formatNumber
 }: VideoCardProps) {
   return (
@@ -73,7 +75,7 @@ export default function VideoCard({
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
           <span className="flex items-center gap-1">
             <Icon name="Eye" size={14} />
-            {formatNumber(video.views)}
+            {formatNumber(getVideoViews(video.id, video.views))}
           </span>
         </div>
         <div className="flex gap-2">

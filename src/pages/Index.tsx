@@ -32,6 +32,7 @@ export default function Index() {
   const [sortBy, setSortBy] = useState<'popular' | 'date' | 'likes'>('popular');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [categoryLinkCopied, setCategoryLinkCopied] = useState(false);
+  const [videoViews, setVideoViews] = useState<{ [key: number]: number }>({});
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -41,6 +42,7 @@ export default function Index() {
     const savedUserName = localStorage.getItem('userName');
     const savedHistory = localStorage.getItem('watchHistory');
     const savedTheme = localStorage.getItem('darkMode');
+    const savedViews = localStorage.getItem('videoViews');
     
     if (savedLikes) setLikedVideos(JSON.parse(savedLikes));
     if (savedFavorites) setFavoriteVideos(JSON.parse(savedFavorites));
@@ -48,6 +50,7 @@ export default function Index() {
     if (savedComments) setComments(JSON.parse(savedComments));
     if (savedUserName) setUserName(savedUserName);
     if (savedHistory) setWatchHistory(JSON.parse(savedHistory));
+    if (savedViews) setVideoViews(JSON.parse(savedViews));
     if (savedTheme) {
       const isDark = JSON.parse(savedTheme);
       setIsDarkMode(isDark);
@@ -97,6 +100,10 @@ export default function Index() {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  useEffect(() => {
+    localStorage.setItem('videoViews', JSON.stringify(videoViews));
+  }, [videoViews]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -200,6 +207,10 @@ export default function Index() {
       ...prev.filter(h => h.videoId !== video.id),
       { videoId: video.id, timestamp: Date.now() }
     ]);
+    setVideoViews(prev => ({
+      ...prev,
+      [video.id]: (prev[video.id] || 0) + 1
+    }));
   };
 
   const handleOpenComments = (video: Video) => {
@@ -216,6 +227,10 @@ export default function Index() {
       ...prev.filter(h => h.videoId !== video.id),
       { videoId: video.id, timestamp: Date.now() }
     ]);
+    setVideoViews(prev => ({
+      ...prev,
+      [video.id]: (prev[video.id] || 0) + 1
+    }));
   };
 
   const toggleLike = (videoId: number, e: React.MouseEvent) => {
@@ -346,6 +361,10 @@ export default function Index() {
 
   const getVideoLikes = (videoId: number, baseLikes: number) => {
     return likedVideos.includes(videoId) ? baseLikes + 1 : baseLikes;
+  };
+
+  const getVideoViews = (videoId: number, baseViews: number) => {
+    return baseViews + (videoViews[videoId] || 0);
   };
 
   return (
@@ -623,6 +642,7 @@ export default function Index() {
                   onFavorite={toggleFavorite}
                   onShare={handleShare}
                   getVideoLikes={getVideoLikes}
+                  getVideoViews={getVideoViews}
                   formatNumber={formatNumber}
                 />
               ))}
@@ -680,6 +700,7 @@ export default function Index() {
                   onFavorite={toggleFavorite}
                   onShare={handleShare}
                   getVideoLikes={getVideoLikes}
+                  getVideoViews={getVideoViews}
                   formatNumber={formatNumber}
                 />
               ))}
