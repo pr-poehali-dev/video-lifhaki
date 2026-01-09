@@ -320,6 +320,11 @@ export default function Index() {
       .slice(0, 3);
   };
 
+  const handleClearHistory = () => {
+    setWatchedVideos([]);
+    setWatchHistory([]);
+  };
+
   const formatTimeAgo = (timestamp: number) => {
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
     
@@ -636,9 +641,22 @@ export default function Index() {
         )}
 
         <div>
-          <h2 className="text-lg font-semibold mb-4 text-foreground">
-            {selectedCategory === 'Избранное' ? 'Избранные видео' : selectedCategory === 'История' ? 'История просмотров' : 'Все видео'}
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">
+              {selectedCategory === 'Избранное' ? 'Избранные видео' : selectedCategory === 'История' ? 'История просмотров' : 'Все видео'}
+            </h2>
+            {selectedCategory === 'История' && watchedVideos.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearHistory}
+                className="flex items-center gap-2"
+              >
+                <Icon name="Trash2" size={16} />
+                Очистить историю
+              </Button>
+            )}
+          </div>
           {selectedCategory === 'Избранное' && filteredVideos.length === 0 ? (
             <div className="text-center py-16">
               <Icon name="Star" size={64} className="text-muted-foreground/30 mx-auto mb-4" />
