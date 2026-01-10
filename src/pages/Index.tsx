@@ -53,6 +53,9 @@ export default function Index() {
   const [filterName, setFilterName] = useState('');
   const [editingFilterId, setEditingFilterId] = useState<string | null>(null);
   const [editingFilterName, setEditingFilterName] = useState('');
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [exportSuccess, setExportSuccess] = useState(false);
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -352,6 +355,34 @@ export default function Index() {
   const cancelEditing = () => {
     setEditingFilterId(null);
     setEditingFilterName('');
+  };
+
+  const exportFilters = async () => {
+    const data = JSON.stringify(savedFilters, null, 2);
+    await navigator.clipboard.writeText(data);
+    setExportSuccess(true);
+    setTimeout(() => setExportSuccess(false), 2000);
+  };
+
+  const importFilters = () => {
+    try {
+      const imported = JSON.parse(importText);
+      if (!Array.isArray(imported)) {
+        throw new Error('Invalid format');
+      }
+      
+      const merged = [...savedFilters, ...imported.map(f => ({
+        ...f,
+        id: Date.now().toString() + Math.random().toString()
+      }))];
+      
+      setSavedFilters(merged);
+      localStorage.setItem('savedFilters', JSON.stringify(merged));
+      setImportDialogOpen(false);
+      setImportText('');
+    } catch (error) {
+      alert('Ошибка импорта. Проверьте формат данных.');
+    }
   };
 
   const handleAddComment = () => {
@@ -668,7 +699,29 @@ export default function Index() {
 
         {savedFilters.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-4 text-foreground">Избранные фильтры</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">Избранные фильтры</h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportFilters}
+                  className="flex items-center gap-1 text-xs"
+                >
+                  <Icon name={exportSuccess ? "Check" : "Upload"} size={12} />
+                  {exportSuccess ? 'Скопировано!' : 'Экспорт'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setImportDialogOpen(true)}
+                  className="flex items-center gap-1 text-xs"
+                >
+                  <Icon name="Download" size={12} />
+                  Импорт
+                </Button>
+              </div>
+            </div>
             <div className="flex flex-wrap gap-2">
               {savedFilters.map((filter) => (
                 <div key={filter.id} className="relative group">
@@ -1191,6 +1244,50 @@ export default function Index() {
         formatNumber={formatNumber}
         onVideoClick={handleVideoClick}
       />
+
+      {importDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setImportDialogOpen(false)}>
+          <Card className="w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-foreground">Импорт фильтров</h3>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setImportDialogOpen(false)}
+                >
+                  <Icon name="X" size={20} />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Вставьте JSON-данные с фильтрами, полученные при экспорте
+              </p>
+              <textarea
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                placeholder='[{"name":"Мой фильтр","duration":"short",...}]'
+                className="w-full h-40 p-3 border rounded-lg text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setImportDialogOpen(false)}
+                >
+                  Отмена
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={importFilters}
+                  disabled={!importText.trim()}
+                >
+                  Импортировать
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
