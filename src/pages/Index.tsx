@@ -51,6 +51,8 @@ export default function Index() {
     category: string;
   }>>([]);
   const [filterName, setFilterName] = useState('');
+  const [editingFilterId, setEditingFilterId] = useState<string | null>(null);
+  const [editingFilterName, setEditingFilterName] = useState('');
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -328,6 +330,28 @@ export default function Index() {
     const updated = savedFilters.filter(f => f.id !== filterId);
     setSavedFilters(updated);
     localStorage.setItem('savedFilters', JSON.stringify(updated));
+  };
+
+  const startEditingFilter = (filter: typeof savedFilters[0]) => {
+    setEditingFilterId(filter.id);
+    setEditingFilterName(filter.name);
+  };
+
+  const saveFilterName = (filterId: string) => {
+    if (!editingFilterName.trim()) return;
+    
+    const updated = savedFilters.map(f => 
+      f.id === filterId ? { ...f, name: editingFilterName.trim() } : f
+    );
+    setSavedFilters(updated);
+    localStorage.setItem('savedFilters', JSON.stringify(updated));
+    setEditingFilterId(null);
+    setEditingFilterName('');
+  };
+
+  const cancelEditing = () => {
+    setEditingFilterId(null);
+    setEditingFilterName('');
   };
 
   const handleAddComment = () => {
@@ -648,25 +672,72 @@ export default function Index() {
             <div className="flex flex-wrap gap-2">
               {savedFilters.map((filter) => (
                 <div key={filter.id} className="relative group">
-                  <Button
-                    variant="outline"
-                    onClick={() => applyFilter(filter)}
-                    className="rounded-full flex items-center gap-2 pr-8"
-                  >
-                    <Icon name="Bookmark" size={14} />
-                    {filter.name}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteFilter(filter.id);
-                    }}
-                  >
-                    <Icon name="X" size={12} />
-                  </Button>
+                  {editingFilterId === filter.id ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="text"
+                        value={editingFilterName}
+                        onChange={(e) => setEditingFilterName(e.target.value)}
+                        className="h-9 w-40 text-sm"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveFilterName(filter.id);
+                          if (e.key === 'Escape') cancelEditing();
+                        }}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={() => saveFilterName(filter.id)}
+                      >
+                        <Icon name="Check" size={14} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={cancelEditing}
+                      >
+                        <Icon name="X" size={14} />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => applyFilter(filter)}
+                        className="rounded-full flex items-center gap-2 pr-16"
+                      >
+                        <Icon name="Bookmark" size={14} />
+                        {filter.name}
+                      </Button>
+                      <div className="absolute right-0 top-0 h-full flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-full w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startEditingFilter(filter);
+                          }}
+                        >
+                          <Icon name="Pencil" size={12} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-full w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteFilter(filter.id);
+                          }}
+                        >
+                          <Icon name="X" size={12} />
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
