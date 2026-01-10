@@ -9,6 +9,7 @@ import VideoPlayerDialog from '@/components/VideoPlayerDialog';
 import CommentsDialog from '@/components/CommentsDialog';
 import ShareDialog from '@/components/ShareDialog';
 import AchievementsDialog from '@/components/AchievementsDialog';
+import LeaderboardDialog from '@/components/LeaderboardDialog';
 import { Video, Comment } from '@/types/video';
 import { mockVideos, categories } from '@/data/mockVideos';
 import { achievements as defaultAchievements, Achievement } from '@/types/achievements';
@@ -39,6 +40,7 @@ export default function Index() {
   const [achievements, setAchievements] = useState<Achievement[]>(defaultAchievements);
   const [achievementsDialogOpen, setAchievementsDialogOpen] = useState(false);
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
+  const [leaderboardDialogOpen, setLeaderboardDialogOpen] = useState(false);
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -501,6 +503,13 @@ export default function Index() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
+                    onClick={() => setLeaderboardDialogOpen(true)}
+                  >
+                    <Icon name="BarChart3" size={20} />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
                     onClick={() => setAchievementsDialogOpen(true)}
                     className="relative"
                   >
@@ -862,6 +871,16 @@ export default function Index() {
         open={achievementsDialogOpen}
         onOpenChange={setAchievementsDialogOpen}
         achievements={achievements}
+      />
+
+      <LeaderboardDialog
+        open={leaderboardDialogOpen}
+        onOpenChange={setLeaderboardDialogOpen}
+        videos={mockVideos}
+        getVideoViews={getVideoViews}
+        getVideoLikes={getVideoLikes}
+        formatNumber={formatNumber}
+        onVideoClick={handleVideoClick}
       />
     </div>
   );
