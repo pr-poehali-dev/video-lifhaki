@@ -42,6 +42,15 @@ export default function Index() {
   const [achievementsDialogOpen, setAchievementsDialogOpen] = useState(false);
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [leaderboardDialogOpen, setLeaderboardDialogOpen] = useState(false);
+  const [savedFilters, setSavedFilters] = useState<Array<{
+    id: string;
+    name: string;
+    duration: 'all' | 'short' | 'medium' | 'long';
+    difficulty: 'all' | 'easy' | 'medium' | 'hard';
+    sortBy: 'popular' | 'date' | 'likes';
+    category: string;
+  }>>([]);
+  const [filterName, setFilterName] = useState('');
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -53,6 +62,7 @@ export default function Index() {
     const savedTheme = localStorage.getItem('darkMode');
     const savedViews = localStorage.getItem('videoViews');
     const savedAchievements = localStorage.getItem('achievements');
+    const savedFiltersData = localStorage.getItem('savedFilters');
     
     if (savedLikes) setLikedVideos(JSON.parse(savedLikes));
     if (savedFavorites) setFavoriteVideos(JSON.parse(savedFavorites));
@@ -62,6 +72,7 @@ export default function Index() {
     if (savedHistory) setWatchHistory(JSON.parse(savedHistory));
     if (savedViews) setVideoViews(JSON.parse(savedViews));
     if (savedAchievements) setAchievements(JSON.parse(savedAchievements));
+    if (savedFiltersData) setSavedFilters(JSON.parse(savedFiltersData));
     if (savedTheme) {
       const isDark = JSON.parse(savedTheme);
       setIsDarkMode(isDark);
@@ -286,6 +297,37 @@ export default function Index() {
         ? prev.filter(id => id !== videoId)
         : [...prev, videoId]
     );
+  };
+
+  const saveCurrentFilters = () => {
+    if (!filterName.trim()) return;
+    
+    const newFilter = {
+      id: Date.now().toString(),
+      name: filterName.trim(),
+      duration: durationFilter,
+      difficulty: difficultyFilter,
+      sortBy: sortBy,
+      category: selectedCategory
+    };
+    
+    const updated = [...savedFilters, newFilter];
+    setSavedFilters(updated);
+    localStorage.setItem('savedFilters', JSON.stringify(updated));
+    setFilterName('');
+  };
+
+  const applyFilter = (filter: typeof savedFilters[0]) => {
+    setDurationFilter(filter.duration);
+    setDifficultyFilter(filter.difficulty);
+    setSortBy(filter.sortBy);
+    setSelectedCategory(filter.category);
+  };
+
+  const deleteFilter = (filterId: string) => {
+    const updated = savedFilters.filter(f => f.id !== filterId);
+    setSavedFilters(updated);
+    localStorage.setItem('savedFilters', JSON.stringify(updated));
   };
 
   const handleAddComment = () => {
@@ -600,25 +642,82 @@ export default function Index() {
           </div>
         </div>
 
+        {savedFilters.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold mb-4 text-foreground">Избранные фильтры</h2>
+            <div className="flex flex-wrap gap-2">
+              {savedFilters.map((filter) => (
+                <div key={filter.id} className="relative group">
+                  <Button
+                    variant="outline"
+                    onClick={() => applyFilter(filter)}
+                    className="rounded-full flex items-center gap-2 pr-8"
+                  >
+                    <Icon name="Bookmark" size={14} />
+                    {filter.name}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteFilter(filter.id);
+                    }}
+                  >
+                    <Icon name="X" size={12} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground">Фильтры</h2>
-            {(durationFilter !== 'all' || difficultyFilter !== 'all' || sortBy !== 'popular' || searchQuery !== '') && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setDurationFilter('all');
-                  setDifficultyFilter('all');
-                  setSortBy('popular');
-                  setSearchQuery('');
-                }}
-                className="flex items-center gap-1 text-xs"
-              >
-                <Icon name="X" size={14} />
-                Сбросить все
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {(durationFilter !== 'all' || difficultyFilter !== 'all' || sortBy !== 'popular' || searchQuery !== '') && (
+                <>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="text"
+                      placeholder="Название набора"
+                      value={filterName}
+                      onChange={(e) => setFilterName(e.target.value)}
+                      className="h-8 w-40 text-xs"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveCurrentFilters();
+                      }}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={saveCurrentFilters}
+                      disabled={!filterName.trim()}
+                      className="flex items-center gap-1 text-xs h-8"
+                    >
+                      <Icon name="Bookmark" size={12} />
+                      Сохранить
+                    </Button>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setDurationFilter('all');
+                      setDifficultyFilter('all');
+                      setSortBy('popular');
+                      setSearchQuery('');
+                    }}
+                    className="flex items-center gap-1 text-xs"
+                  >
+                    <Icon name="X" size={14} />
+                    Сбросить
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
           
           <div className="space-y-4">
