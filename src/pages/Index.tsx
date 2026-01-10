@@ -8,8 +8,10 @@ import VideoCard from '@/components/VideoCard';
 import VideoPlayerDialog from '@/components/VideoPlayerDialog';
 import CommentsDialog from '@/components/CommentsDialog';
 import ShareDialog from '@/components/ShareDialog';
+import AchievementsDialog from '@/components/AchievementsDialog';
 import { Video, Comment } from '@/types/video';
 import { mockVideos, categories } from '@/data/mockVideos';
+import { achievements as defaultAchievements, Achievement } from '@/types/achievements';
 
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState('Все');
@@ -33,6 +35,9 @@ export default function Index() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [categoryLinkCopied, setCategoryLinkCopied] = useState(false);
   const [videoViews, setVideoViews] = useState<{ [key: number]: number }>({});
+  const [achievements, setAchievements] = useState<Achievement[]>(defaultAchievements);
+  const [achievementsDialogOpen, setAchievementsDialogOpen] = useState(false);
+  const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
 
   useEffect(() => {
     const savedLikes = localStorage.getItem('likedVideos');
@@ -43,6 +48,7 @@ export default function Index() {
     const savedHistory = localStorage.getItem('watchHistory');
     const savedTheme = localStorage.getItem('darkMode');
     const savedViews = localStorage.getItem('videoViews');
+    const savedAchievements = localStorage.getItem('achievements');
     
     if (savedLikes) setLikedVideos(JSON.parse(savedLikes));
     if (savedFavorites) setFavoriteVideos(JSON.parse(savedFavorites));
@@ -51,6 +57,7 @@ export default function Index() {
     if (savedUserName) setUserName(savedUserName);
     if (savedHistory) setWatchHistory(JSON.parse(savedHistory));
     if (savedViews) setVideoViews(JSON.parse(savedViews));
+    if (savedAchievements) setAchievements(JSON.parse(savedAchievements));
     if (savedTheme) {
       const isDark = JSON.parse(savedTheme);
       setIsDarkMode(isDark);
@@ -104,6 +111,21 @@ export default function Index() {
   useEffect(() => {
     localStorage.setItem('videoViews', JSON.stringify(videoViews));
   }, [videoViews]);
+
+  useEffect(() => {
+    localStorage.setItem('achievements', JSON.stringify(achievements));
+  }, [achievements]);
+
+  useEffect(() => {
+    checkAchievements();
+  }, [watchedVideos, likedVideos, favoriteVideos]);
+
+  useEffect(() => {
+    if (newAchievement) {
+      const timer = setTimeout(() => setNewAchievement(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [newAchievement]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -367,12 +389,43 @@ export default function Index() {
     return baseViews + (videoViews[videoId] || 0);
   };
 
+  const checkAchievements = () => {
+    const updated = achievements.map(achievement => {
+      if (achievement.unlocked) return achievement;
+
+      let currentCount = 0;
+      if (achievement.type === 'views') currentCount = watchedVideos.length;
+      if (achievement.type === 'likes') currentCount = likedVideos.length;
+      if (achievement.type === 'favorites') currentCount = favoriteVideos.length;
+
+      if (currentCount >= achievement.requirement) {
+        setNewAchievement({ ...achievement, unlocked: true });
+        return { ...achievement, unlocked: true };
+      }
+      return achievement;
+    });
+
+    setAchievements(updated);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {categoryLinkCopied && (
         <div className="fixed top-4 right-4 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
           <Icon name="Check" size={16} />
           Ссылка скопирована!
+        </div>
+      )}
+      {newAchievement && (
+        <div className="fixed top-20 right-4 z-50 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 animate-fade-in max-w-sm">
+          <div className="p-2 bg-white/20 rounded-full">
+            <Icon name={newAchievement.icon} size={24} />
+          </div>
+          <div className="flex-1">
+            <div className="font-bold text-sm mb-1">🎉 Новое достижение!</div>
+            <div className="font-semibold">{newAchievement.title}</div>
+            <div className="text-xs opacity-90">{newAchievement.description}</div>
+          </div>
         </div>
       )}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-lg border-b border-border">
@@ -411,6 +464,19 @@ export default function Index() {
                       {favoriteVideos.length}
                     </Badge>
                   )}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setAchievementsDialogOpen(true)}
+                    className="relative"
+                  >
+                    <Icon name="Trophy" size={20} />
+                    {achievements.filter(a => a.unlocked).length > 0 && (
+                      <Badge variant="default" className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
+                        {achievements.filter(a => a.unlocked).length}
+                      </Badge>
+                    )}
+                  </Button>
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -756,6 +822,12 @@ export default function Index() {
         onShareToWhatsApp={shareToWhatsApp}
         onCopyToClipboard={copyToClipboard}
         getShareUrl={getShareUrl}
+      />
+
+      <AchievementsDialog
+        open={achievementsDialogOpen}
+        onOpenChange={setAchievementsDialogOpen}
+        achievements={achievements}
       />
     </div>
   );
