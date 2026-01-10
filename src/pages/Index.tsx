@@ -471,7 +471,7 @@ export default function Index() {
           </div>
         </div>
       )}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-background/80 backdrop-blur-lg border-b border-border">
+      <header className="sticky top-0 z-50 bg-white/90 dark:bg-card/90 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -882,7 +882,7 @@ export default function Index() {
         </div>
       </main>
 
-      <footer className="border-t border-border mt-16 py-8 bg-white">
+      <footer className="border-t border-border mt-16 py-8 bg-white dark:bg-card">
         <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>© 2024 ЛайфХаки — Делимся полезными советами</p>
         </div>

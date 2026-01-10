@@ -35,7 +35,7 @@ export default function VideoCard({
 }: VideoCardProps) {
   return (
     <Card 
-      className="overflow-hidden hover:shadow-lg transition-all cursor-pointer group animate-fade-in"
+      className="overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer group animate-fade-in border-border/50 hover:border-primary/30"
       style={{ animationDelay: `${index * 50}ms` }}
       onClick={() => onVideoClick(video)}
     >
