@@ -601,8 +601,30 @@ export default function Index() {
         </div>
 
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4 text-foreground">Длительность</h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">Фильтры</h2>
+            {(durationFilter !== 'all' || difficultyFilter !== 'all' || sortBy !== 'popular' || searchQuery !== '') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setDurationFilter('all');
+                  setDifficultyFilter('all');
+                  setSortBy('popular');
+                  setSearchQuery('');
+                }}
+                className="flex items-center gap-1 text-xs"
+              >
+                <Icon name="X" size={14} />
+                Сбросить все
+              </Button>
+            )}
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium mb-2 text-muted-foreground">Длительность</h3>
+              <div className="flex flex-wrap gap-2">
             <Button
               variant={durationFilter === 'all' ? 'default' : 'outline'}
               onClick={() => setDurationFilter('all')}
@@ -635,12 +657,12 @@ export default function Index() {
               <Icon name="Film" size={14} />
               Длинные (15+ мин)
             </Button>
-          </div>
-        </div>
+              </div>
+            </div>
 
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4 text-foreground">Сортировка</h2>
-          <div className="flex flex-wrap gap-2">
+            <div>
+              <h3 className="text-sm font-medium mb-2 text-muted-foreground">Сортировка</h3>
+              <div className="flex flex-wrap gap-2">
             <Button
               variant={sortBy === 'popular' ? 'default' : 'outline'}
               onClick={() => setSortBy('popular')}
@@ -665,12 +687,12 @@ export default function Index() {
               <Icon name="ThumbsUp" size={14} />
               По лайкам
             </Button>
-          </div>
-        </div>
+              </div>
+            </div>
 
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4 text-foreground">Сложность</h2>
-          <div className="flex flex-wrap gap-2">
+            <div>
+              <h3 className="text-sm font-medium mb-2 text-muted-foreground">Сложность</h3>
+              <div className="flex flex-wrap gap-2">
             <Button
               variant={difficultyFilter === 'all' ? 'default' : 'outline'}
               onClick={() => setDifficultyFilter('all')}
@@ -703,6 +725,16 @@ export default function Index() {
               <Icon name="Flame" size={14} />
               Сложные
             </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">
+              Найдено видео: <span className="font-semibold text-foreground">{filteredVideos.length}</span>
+            </span>
           </div>
         </div>
 
