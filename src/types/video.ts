@@ -7,6 +7,7 @@ export interface Video {
   views: number;
   likes: number;
   description: string;
+  difficulty: 'easy' | 'medium' | 'hard';
 }
 
 export interface Comment {

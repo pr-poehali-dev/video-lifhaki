@@ -33,6 +33,7 @@ export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [durationFilter, setDurationFilter] = useState<'all' | 'short' | 'medium' | 'long'>('all');
+  const [difficultyFilter, setDifficultyFilter] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
   const [sortBy, setSortBy] = useState<'popular' | 'date' | 'likes'>('popular');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [categoryLinkCopied, setCategoryLinkCopied] = useState(false);
@@ -186,6 +187,10 @@ export default function Index() {
       });
     }
 
+    if (difficultyFilter !== 'all') {
+      videos = videos.filter(video => video.difficulty === difficultyFilter);
+    }
+
     if (selectedCategory !== 'История') {
       videos = [...videos].sort((a, b) => {
         if (sortBy === 'popular') return b.views - a.views;
@@ -200,7 +205,7 @@ export default function Index() {
     }
 
     return videos;
-  }, [selectedCategory, favoriteVideos, watchedVideos, watchHistory, searchQuery, durationFilter, sortBy, likedVideos]);
+  }, [selectedCategory, favoriteVideos, watchedVideos, watchHistory, searchQuery, durationFilter, difficultyFilter, sortBy, likedVideos]);
 
   const recommendedVideos = useMemo(() => {
     if (watchedVideos.length === 0) return mockVideos.slice(0, 3);
@@ -659,6 +664,44 @@ export default function Index() {
             >
               <Icon name="ThumbsUp" size={14} />
               По лайкам
+            </Button>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">Сложность</h2>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={difficultyFilter === 'all' ? 'default' : 'outline'}
+              onClick={() => setDifficultyFilter('all')}
+              className="rounded-full flex items-center gap-1"
+            >
+              <Icon name="List" size={14} />
+              Все
+            </Button>
+            <Button
+              variant={difficultyFilter === 'easy' ? 'default' : 'outline'}
+              onClick={() => setDifficultyFilter('easy')}
+              className="rounded-full flex items-center gap-1"
+            >
+              <Icon name="CircleCheck" size={14} />
+              Лёгкие
+            </Button>
+            <Button
+              variant={difficultyFilter === 'medium' ? 'default' : 'outline'}
+              onClick={() => setDifficultyFilter('medium')}
+              className="rounded-full flex items-center gap-1"
+            >
+              <Icon name="Zap" size={14} />
+              Средние
+            </Button>
+            <Button
+              variant={difficultyFilter === 'hard' ? 'default' : 'outline'}
+              onClick={() => setDifficultyFilter('hard')}
+              className="rounded-full flex items-center gap-1"
+            >
+              <Icon name="Flame" size={14} />
+              Сложные
             </Button>
           </div>
         </div>

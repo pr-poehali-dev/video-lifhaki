@@ -9,7 +9,8 @@ export const mockVideos: Video[] = [
     duration: '2:15',
     views: 245000,
     likes: 12400,
-    description: 'Японский метод складывания одежды, который сэкономит место и время'
+    description: 'Японский метод складывания одежды, который сэкономит место и время',
+    difficulty: 'medium'
   },
   {
     id: 2,
@@ -19,7 +20,8 @@ export const mockVideos: Video[] = [
     duration: '1:30',
     views: 189000,
     likes: 9500,
-    description: 'Используй лимон и воду для идеальной чистоты'
+    description: 'Используй лимон и воду для идеальной чистоты',
+    difficulty: 'easy'
   },
   {
     id: 3,
@@ -29,7 +31,8 @@ export const mockVideos: Video[] = [
     duration: '3:45',
     views: 312000,
     likes: 15600,
-    description: 'Простые решения для порядка на рабочем столе'
+    description: 'Простые решения для порядка на рабочем столе',
+    difficulty: 'medium'
   },
   {
     id: 4,
@@ -39,7 +42,8 @@ export const mockVideos: Video[] = [
     duration: '2:00',
     views: 421000,
     likes: 21000,
-    description: 'Лайфхак с ложкой для безупречного макияжа'
+    description: 'Лайфхак с ложкой для безупречного макияжа',
+    difficulty: 'easy'
   },
   {
     id: 5,
@@ -49,7 +53,8 @@ export const mockVideos: Video[] = [
     duration: '1:45',
     views: 156000,
     likes: 7800,
-    description: 'Сохрани свежесть зелени на месяцы'
+    description: 'Сохрани свежесть зелени на месяцы',
+    difficulty: 'easy'
   },
   {
     id: 6,
@@ -59,7 +64,8 @@ export const mockVideos: Video[] = [
     duration: '2:30',
     views: 278000,
     likes: 13900,
-    description: 'Как заряжать телефон в 2 раза быстрее'
+    description: 'Как заряжать телефон в 2 раза быстрее',
+    difficulty: 'medium'
   },
   {
     id: 7,
@@ -69,7 +75,8 @@ export const mockVideos: Video[] = [
     duration: '3:00',
     views: 198000,
     likes: 9900,
-    description: 'Натуральные средства для любых пятен'
+    description: 'Натуральные средства для любых пятен',
+    difficulty: 'medium'
   },
   {
     id: 8,
@@ -79,7 +86,8 @@ export const mockVideos: Video[] = [
     duration: '1:50',
     views: 334000,
     likes: 16700,
-    description: 'Простая техника для пышных волос'
+    description: 'Простая техника для пышных волос',
+    difficulty: 'easy'
   },
 ];
 

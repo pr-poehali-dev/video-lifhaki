@@ -68,6 +68,24 @@ export default function VideoCard({
           <Badge variant="secondary" className="text-xs">
             {video.category}
           </Badge>
+          {video.difficulty === 'easy' && (
+            <Badge variant="outline" className="text-xs flex items-center gap-1 text-green-600 border-green-600">
+              <Icon name="CircleCheck" size={10} />
+              Лёгкий
+            </Badge>
+          )}
+          {video.difficulty === 'medium' && (
+            <Badge variant="outline" className="text-xs flex items-center gap-1 text-yellow-600 border-yellow-600">
+              <Icon name="Zap" size={10} />
+              Средний
+            </Badge>
+          )}
+          {video.difficulty === 'hard' && (
+            <Badge variant="outline" className="text-xs flex items-center gap-1 text-red-600 border-red-600">
+              <Icon name="Flame" size={10} />
+              Сложный
+            </Badge>
+          )}
         </div>
         <h3 className="font-semibold text-base mb-2 line-clamp-2 text-foreground group-hover:text-primary transition-colors">
           {video.title}
