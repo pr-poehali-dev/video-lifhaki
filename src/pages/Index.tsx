@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Helmet } from 'react-helmet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -553,8 +554,26 @@ export default function Index() {
     setAchievements(updated);
   };
 
+  const categoryDescriptions: { [key: string]: string } = {
+    'Все': 'Смотрите лучшие лайфхаки и полезные советы для повседневной жизни',
+    'Кулинария': 'Лайфхаки и советы по кулинарии: рецепты, хитрости готовки, лайфхаки для кухни',
+    'Уборка': 'Полезные советы по уборке дома: лайфхаки для чистоты и порядка',
+    'Здоровье': 'Советы о здоровье: упражнения, wellness, здоровый образ жизни',
+    'Красота': 'Лайфхаки красоты: макияж, уход за кожей, beauty-советы',
+    'Техника': 'Полезные советы по технике: настройка, ремонт, лайфхаки для гаджетов',
+    'DIY': 'DIY лайфхаки и идеи: сделай сам, handmade, творчество',
+    'Избранное': 'Ваши избранные лайфхаки и полезные советы',
+    'История': 'История просмотров ваших видео с лайфхаками'
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{selectedCategory === 'Все' ? 'ЛайфХаки — Полезные видео и советы на каждый день' : `${selectedCategory} — ЛайфХаки и советы`}</title>
+        <meta name="description" content={categoryDescriptions[selectedCategory] || categoryDescriptions['Все']} />
+        <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : ''} />
+      </Helmet>
+      
       {categoryLinkCopied && (
         <div className="fixed top-4 right-4 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
           <Icon name="Check" size={16} />
