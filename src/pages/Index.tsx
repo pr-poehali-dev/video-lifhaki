@@ -215,6 +215,13 @@ export default function Index() {
     return sameCategoryVideos.slice(0, 3);
   }, [watchedVideos]);
 
+  const videoOfTheDay = useMemo(() => {
+    const today = new Date().toDateString();
+    const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const index = seed % mockVideos.length;
+    return mockVideos[index];
+  }, []);
+
   const videoComments = useMemo(() => {
     if (!currentVideo) return [];
     return comments
@@ -654,6 +661,63 @@ export default function Index() {
               По лайкам
             </Button>
           </div>
+        </div>
+
+        <div className="mb-8">
+          <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/20">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Icon name="Sparkles" className="text-primary" size={24} />
+                <h2 className="text-xl font-bold text-foreground">Видео дня</h2>
+                <Badge variant="default" className="ml-auto">
+                  {new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
+                </Badge>
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div 
+                  className="relative group cursor-pointer"
+                  onClick={() => handleVideoClick(videoOfTheDay)}
+                >
+                  <img
+                    src={`https://img.youtube.com/vi/${videoOfTheDay.youtubeId}/maxresdefault.jpg`}
+                    alt={videoOfTheDay.title}
+                    className="w-full h-64 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors rounded-lg flex items-center justify-center">
+                    <div className="bg-primary text-primary-foreground rounded-full p-4 group-hover:scale-110 transition-transform">
+                      <Icon name="Play" size={32} />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-black/80 text-white text-sm px-3 py-1 rounded">
+                    {videoOfTheDay.duration}
+                  </div>
+                </div>
+                <div className="flex flex-col justify-center">
+                  <Badge variant="secondary" className="w-fit mb-3">{videoOfTheDay.category}</Badge>
+                  <h3 className="text-2xl font-bold mb-3 text-foreground">{videoOfTheDay.title}</h3>
+                  <p className="text-muted-foreground mb-4 line-clamp-3">{videoOfTheDay.description}</p>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                    <span className="flex items-center gap-1">
+                      <Icon name="Eye" size={16} />
+                      {formatNumber(getVideoViews(videoOfTheDay.id, videoOfTheDay.views))}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Icon name="ThumbsUp" size={16} />
+                      {formatNumber(getVideoLikes(videoOfTheDay.id, videoOfTheDay.likes))}
+                    </span>
+                  </div>
+                  <Button 
+                    onClick={() => handleVideoClick(videoOfTheDay)}
+                    className="w-full"
+                    size="lg"
+                  >
+                    <Icon name="Play" size={20} className="mr-2" />
+                    Смотреть сейчас
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {currentVideo && (
